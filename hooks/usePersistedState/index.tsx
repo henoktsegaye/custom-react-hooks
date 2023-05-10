@@ -3,7 +3,8 @@
  * Version: 1.0.0
  * license: MIT
  */
-import { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 /**
  * @description This hook is used to persist state in local storage
@@ -19,17 +20,27 @@ export const usePersistedState = <T,>(
   initialState: T,
   timeout: number = 500
 ): [T, Dispatch<SetStateAction<T>>] => {
-  const [state, setState] = useState<T>(() => {
+  const [state, setState] = useState<T>((): T => {
     const storageValue = localStorage.getItem(key);
-    return storageValue ? (JSON.parse(storageValue) as T) : initialState;
+    try {
+      if (storageValue !== null) {
+        return JSON.parse(storageValue);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    return initialState;
   });
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       localStorage.setItem(key, JSON.stringify(state));
     }, timeout);
 
-    return () => clearTimeout(timeoutId);
-  }, [key, state]);
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [state, key]);
 
   return [state, setState];
 };

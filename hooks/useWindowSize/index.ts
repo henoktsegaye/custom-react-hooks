@@ -4,7 +4,7 @@
  * license: MIT
  */
 
-import { useState, useEffect, Dispatch } from "react";
+import { useState, useEffect } from 'react';
 
 export type WindowSize = {
   width: number;
@@ -19,18 +19,20 @@ export const useWindowSize = (): WindowSize | null => {
   const [windowSize, setWindowSize] = useState<WindowSize | null>(null);
 
   useEffect(() => {
-    const handleResize = () => {
+    const handleResize = (): void => {
       setWindowSize({
         width: window.innerWidth,
         height: window.innerHeight,
       });
     };
 
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
 
     handleResize();
 
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return windowSize;

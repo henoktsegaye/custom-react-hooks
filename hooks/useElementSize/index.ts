@@ -6,7 +6,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 
-type Size = {
+export type Size = {
   width: number;
   height: number;
 };
@@ -23,8 +23,8 @@ export const useElementSize = <T extends HTMLElement>(): {
   const ref = useRef<T>(null);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (!ref.current) {
+    const handleResize = (): void => {
+      if (ref.current === null) {
         return;
       }
       setSize({
@@ -37,7 +37,9 @@ export const useElementSize = <T extends HTMLElement>(): {
 
     handleResize();
 
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return { size, ref };
