@@ -14,7 +14,7 @@ debounce hook - debounce a value with a given delay
 ## How to use
 
 ```ts
-import useDebounce from 'hooks/useDebounce';
+import { useDebounce } from 'hooks/useDebounce';
 
 const example = () => {
   const [value, setValue] = useState('');
