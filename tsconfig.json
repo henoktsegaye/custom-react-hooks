@@ -4,6 +4,7 @@
     "module": "commonjs",
     "outDir": "dist",
     "strict": true,
+    "lib": ["DOM", "ES2015"],
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true
   },
