@@ -21,7 +21,7 @@ const example = () => {
 
     useEffect(() => {
         fetch()
-    }, [])
+    }, [fetch])
     
     if(fetching) {
         return 'loading...'

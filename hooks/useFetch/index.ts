@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from "react";
 
 type Props = {
   url: string;
@@ -12,7 +12,7 @@ type State<T> = {
   error: Error | null;
 };
 type ResponseType<T> = {
-  fetch: () => Promise<void>;
+  fetch: (url?: string, options?: RequestInit) => Promise<void>;
   clearCache: () => void;
   hasError: boolean;
 } & State<T>;
@@ -27,6 +27,7 @@ export const useFetch = <T>({
   options,
   cacheDuration,
 }: Props): ResponseType<T> => {
+  const [opts] = useState(options);
   const cache = useRef<Array<Cache<T>> | null>(null);
   const [state, setState] = useState<State<T>>({
     loading: null,
@@ -34,60 +35,65 @@ export const useFetch = <T>({
     data: null,
   });
 
-  const fetchData = async (
-    currentUrl?: string,
-    currentOptions?: RequestInit
-  ): Promise<void> => {
-    const currentUniqueIdentifier = getUniqueString(
-      currentUrl ?? url,
-      currentOptions ?? options
-    );
-    if (cache.current !== null) {
-      const index = cache.current.findIndex(
-        (el) => el.identifier === currentUniqueIdentifier
+  const fetchData = useCallback(
+    async (
+      currentUrl?: string,
+      currentOptions?: RequestInit
+    ): Promise<void> => {
+      const currentUniqueIdentifier = getUniqueString(
+        currentUrl ?? url,
+        currentOptions ?? opts
       );
-      if (
-        index !== -1 &&
-        Date.now() - cache.current[index].epochTime <= cacheDuration
-      ) {
-        return;
+      if (cache.current !== null) {
+        const index = cache.current.findIndex(
+          (el) => el.identifier === currentUniqueIdentifier
+        );
+        if (
+          index !== -1 &&
+          Date.now() - cache.current[index].epochTime <= cacheDuration
+        ) {
+          return;
+        }
       }
-    }
-    try {
-      setState((prev) => ({
-        ...prev,
-        loading: true,
-      }));
-      const result = await fetch(currentUrl ?? url, currentOptions ?? options);
-      const data = result.json() as T;
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        data,
-      }));
-      cache.current = [
-        ...(cache.current ?? []),
-        {
-          identifier: currentUniqueIdentifier,
-          epochTime: Date.now(),
-          data,
-        },
-      ];
-    } catch (err: unknown) {
-      console.error(err);
-      if (err instanceof Error) {
+      try {
+        setState((prev) => ({
+          ...prev,
+          loading: true,
+        }));
+        const result = await fetch(currentUrl ?? url, currentOptions ?? opts);
+        const data = (await result.json()) as T;
         setState((prev) => ({
           ...prev,
           loading: false,
-          error: err as Error,
+          error: null,
+          data,
         }));
+        cache.current = [
+          ...(cache.current ?? []),
+          {
+            identifier: currentUniqueIdentifier,
+            epochTime: Date.now(),
+            data,
+          },
+        ];
+      } catch (err: unknown) {
+        console.error(err);
+        if (err instanceof Error) {
+          setState((prev) => ({
+            ...prev,
+            data: null,
+            loading: false,
+            error: err as Error,
+          }));
+        }
       }
-    }
-  };
+    },
+    [cacheDuration, opts, url]
+  );
 
-  const clearCache = (): void => {
+  const clearCache = useCallback((): void => {
     cache.current = null;
-  };
+  }, []);
 
   return {
     loading: state.loading,
