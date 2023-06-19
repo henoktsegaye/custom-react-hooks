@@ -1,3 +1,9 @@
+/**
+ * Author: Henok Tsegaye
+ * version: 1.0.0
+ * license: MIT
+ */
+
 import { useEffect, useState } from 'react';
 
 type Props<T> = {
